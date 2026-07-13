@@ -3,6 +3,14 @@
 
 #include <stddef.h>
 
+#define TEST_ENV
+
+#ifdef TEST_ENV
+#define STATIC
+#else
+#define STATIC static
+#endif
+
 /*
  * memory_init: Initializes the free list.
  *              This function must have been called before
