@@ -94,8 +94,6 @@ STATIC void shift_block(Block *block, Block **right_half, size_t left_block_size
  *                     Splits the block if necessary.
  * */
 STATIC void *allocate_from_block(Block *block, size_t size) {
-        if (block == NULL) return NULL;
-
         if (should_split_block_to_allocate(block, size)) {
                 Block *right_block;
                 shift_block(block, &right_block, size);
@@ -133,9 +131,8 @@ void memory_init(void) {
 
 void *allocate(size_t bytes) {
         if (bytes == 0) return NULL;
-        
+
         size_t memory_needed = calculate_memory_to_allocate(bytes); 
-        
         Block *block = find_suitable_block(memory_needed);
         if (block == NULL) return NULL;
 
