@@ -16,7 +16,7 @@ void test_get_payload_size() {
         const int test_cases = 5;
         size_t expected_values[] = {64, 128, 8, 4096, 256};
         
-        for (size_t i = 0; i < test_cases; i++) {
+        for (int i = 0; i < test_cases; i++) {
                 size_t expected = expected_values[i];
                 Block block = {.size = HEADER_SIZE + expected};
                 size_t result = get_payload_size(&block);
@@ -141,6 +141,7 @@ void test_find_suitable_block() {
                 else printf("[FAILED]");
                 printf(" find_suitable_block\n");
         }
+        free_list_head = NULL;
 }
 
 void test_shift_block() {
