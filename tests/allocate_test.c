@@ -1,5 +1,6 @@
 /* This file tests the 'allocate' function and related
  * functions that used to allocate memory. */
+#include <alloca.h>
 #include <assert.h>
 #include <stdio.h>
 
@@ -231,6 +232,52 @@ void test_allocate_from_block() {
         printf(" test_allocate_from_block\n");
 }
 
+void test_memory_init() {
+        memory_init();
+
+        if ((byte *)free_list_head == memory
+          && free_list_head->next == NULL
+          && free_list_head->prev == NULL) {
+                printf("[PASSED]");
+        } else {
+                printf("[FAILED]");
+        }
+        printf(" memory_init\n");
+}
+
+void test_allocate_size_0() {
+        memory_init();
+
+        void *m = allocate(0);
+
+        if (m == NULL) printf("[PASSED]");
+        else printf("[FAILED]");
+        printf(" test_allocate_size_0\n");
+}
+
+void test_allocate_size_20() {
+        memory_init();
+
+        void *m = allocate(20);
+
+        if (m != NULL && (byte *)free_list_head == memory + calculate_memory_to_allocate(20)) {
+                printf("[PASSED]");
+        } else {
+                printf("[FAILED]");
+        }
+        printf(" test_allocate_size_20\n");
+}
+
+void test_allocate_size_4100() {
+        memory_init();
+
+        void *m = allocate(4100);
+
+        if (m == NULL && (byte *)free_list_head == memory) printf("[PASSED]");
+        else printf("[FAILED]");
+        printf(" test_allocate_size_4100\n");
+}
+
 int main() {
         test_get_payload_size();      
         test_calculate_memory_to_allocate();
@@ -239,6 +286,11 @@ int main() {
         test_find_suitable_block();
         test_shift_block();
         test_allocate_from_block();
+        test_memory_init();
+        test_allocate_size_0();
+        test_allocate_size_20();
+        test_allocate_size_4100();
+
         return 0;
 }
 
