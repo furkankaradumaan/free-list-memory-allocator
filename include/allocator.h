@@ -38,4 +38,11 @@ void *allocate(size_t bytes);
  * */
 void release(void *ptr);
 
+/**
+ * draw_memory: Prints a representation of the memory
+ *              to see free blocks and allocated blocks in the memory
+ *              visually on the screen.
+ */
+void draw_memory(void);
+
 #endif

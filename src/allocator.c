@@ -94,6 +94,8 @@ STATIC void shift_block(Block *block, Block **right_half, size_t left_block_size
  *                     Splits the block if necessary.
  * */
 STATIC void *allocate_from_block(Block *block, size_t size) {
+        if (block == NULL) return NULL;
+
         if (should_split_block_to_allocate(block, size)) {
                 Block *right_block;
                 shift_block(block, &right_block, size);
@@ -130,9 +132,37 @@ void memory_init(void) {
 
 
 void *allocate(size_t bytes) {
+        if (bytes == 0) return NULL;
+        
         size_t memory_needed = calculate_memory_to_allocate(bytes); 
+        
         Block *block = find_suitable_block(memory_needed);
+        if (block == NULL) return NULL;
+
         void *mem = allocate_from_block(block, memory_needed);
 
         return mem;
+}
+
+void draw_memory(void) {
+        Block *curr_block = free_list_head;
+        byte *curr_addr = memory;
+
+        while (curr_addr < memory + MEMORY_SIZE) {
+                if (curr_block == NULL) {
+                        size_t allocated_block_size = memory + MEMORY_SIZE - curr_addr;
+                        printf("[%zu bytes (Allocated)]", allocated_block_size);
+                        curr_addr = memory + MEMORY_SIZE;
+                } else if (curr_addr < (byte *)curr_block) {
+                        size_t allocated_block_size = (byte *)curr_block - curr_addr;
+                        printf("[%zu bytes (Allocated)]", allocated_block_size);
+                        curr_addr = (byte *)curr_block;
+                } else {
+                        size_t free_block_size = curr_block->size;
+                        printf("[%zu bytes (Free)]", free_block_size);
+                        curr_addr = (byte *)curr_block + free_block_size;
+                        curr_block = curr_block->next;
+                }
+        }
+        printf("\n");
 }
