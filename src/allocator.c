@@ -121,6 +121,49 @@ STATIC void *allocate_from_block(Block *block, size_t size) {
         }
 }
 
+/**
+ *
+ * fits_between: Checks whether block curr fits between prev and
+ *               next blocks without overlapping.
+ */
+STATIC bool fits_between(Block *prev, Block *curr, Block *next) {
+        if (prev && (byte *)prev + prev->size > (byte *)curr) return false;
+        if (next && (byte *)curr + curr->size > (byte *)next) return false;
+        return true;
+}
+
+/*
+ * are_contiguous_blocks: Checks whether block next comes right
+ *                        after prev block in memory.
+ *                        If either prev or next is NULL, returns false.
+ * */
+STATIC bool are_contiguous_blocks(Block *prev, Block *next) {
+        if (!prev || !next) return false;
+        
+        return (byte *)prev + prev->size == (byte *)next;
+}
+
+STATIC void merge_with_prev(Block *block) {
+        if (!block->prev || !block) return;
+
+        if (are_contiguous_blocks(block->prev, block)) {
+                // remove 'block'
+                block->prev->next = block->next;
+                block->prev->size += block->size;
+                if (block->next) block->next->prev = block->prev;
+        }
+}
+
+STATIC void merge_with_next(Block *block) {
+        if (!block->next || !block) return;
+
+        if (are_contiguous_blocks(block, block->next)) {
+                block->size += block->next->size;
+                block->next = block->next->next;
+                if (block->next) block->next->prev = block;
+        }
+}
+
 void memory_init(void) {
         free_list_head = (Block *)memory;
         free_list_head->size = MEMORY_SIZE;
@@ -137,8 +180,59 @@ void *allocate(size_t bytes) {
         if (block == NULL) return NULL;
 
         void *mem = allocate_from_block(block, memory_needed);
-
+        
+        
         return mem;
+}
+
+void release(void *ptr) {
+        // check if given pointer is NULL or
+        // not in 'memory'
+        if (ptr == NULL) return;
+        if ((byte *)ptr < memory || (byte *)ptr >= memory + MEMORY_SIZE) {
+                fprintf(stderr, "Invalid pointer\n");
+                return;
+        }
+        
+        Block *block = (Block *)ptr - 1;
+        if (free_list_head == NULL) {
+                free_list_head = block;
+                free_list_head->next = NULL;
+                free_list_head->prev = NULL;
+
+                return;
+        }
+
+        Block *next = free_list_head;
+        Block *prev = NULL;
+        while (next != NULL) {
+                if (fits_between(prev, block, next)) {
+                        block->prev = prev;
+                        block->next = next;
+                        if (prev) prev->next = block;
+                        else free_list_head = block;
+
+                        if (next) next->prev = block;
+
+                        merge_with_next(block);
+                        merge_with_prev(block);
+
+                        return;
+                }
+                prev = next;
+                next = next->next;
+        }
+        if (fits_between(prev, block, next)) {
+                block->next = next;
+                block->prev = prev;
+                if (prev) prev->next = block;
+
+                merge_with_prev(block);
+
+                return;
+        }
+
+        fprintf(stderr, "This memory (or a part of the memory) is already in free list.\n");
 }
 
 void draw_memory(void) {

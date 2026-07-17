@@ -27,5 +27,14 @@ int main() {
         }
 
         draw_memory();
+        release(students[3]);
+        draw_memory();
+        release(students[4]);
+        draw_memory();
+        release(students[0]);
+        release(students[1]);
+        release(students[2]);
+        draw_memory();
+
         return 0;
 }
